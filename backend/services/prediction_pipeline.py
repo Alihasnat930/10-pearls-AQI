@@ -92,35 +92,55 @@ class AQIPredictor:
                     )
                     print("LSTM loaded (H5 format, recompiled)")
                 else:
-                    raise FileNotFoundError("LSTM model not found")
+                    # Logic to allow "soft" failure if file invalid but allow instantiation
+                    pass
 
-                # Load LSTM config
-                with open(f"{self.models_dir}/lstm_config.json", "r") as f:
-                    config = json.load(f)
-                    self.lstm_lookback = config["lookback"]
+                # Load LSTM config if model was loaded
+                if "lstm" in self.models:
+                    with open(f"{self.models_dir}/lstm_config.json", "r") as f:
+                        config = json.load(f)
+                        self.lstm_lookback = config["lookback"]
+                    
             except Exception as e:
                 print(f"⚠ LSTM not loaded: {e}")
         else:
             print("WARNING: LSTM not available - TensorFlow not installed")
 
         # Load scaler
-        with open(f"{self.models_dir}/scaler.pkl", "rb") as f:
-            self.scaler = pickle.load(f)
-        print("Scaler loaded")
+        try:
+            with open(f"{self.models_dir}/scaler.pkl", "rb") as f:
+                self.scaler = pickle.load(f)
+            print("Scaler loaded")
+        except FileNotFoundError:
+             print("WARNING: Scaler not found - Prediction will not work")
+             self.scaler = None
+        except Exception as e:
+            print(f"WARNING: Error loading scaler: {e}")
+            self.scaler = None
+
 
         # Load feature columns
-        with open(f"{self.models_dir}/feature_columns.pkl", "rb") as f:
-            self.feature_cols = pickle.load(f)
-
-        # Identify AQI column index for exclusion during prediction (Scaler needs it, Model doesn't)
-        self.aqi_index = None
-        if "AQI" in self.feature_cols:
-            self.aqi_index = self.feature_cols.index("AQI")
-            print(
-                f"Target 'AQI' found at index {self.aqi_index} - will be handled during prediction"
-            )
-
-        print(f"Feature columns loaded ({len(self.feature_cols)} features)")
+        try:
+            with open(f"{self.models_dir}/feature_columns.pkl", "rb") as f:
+                self.feature_cols = pickle.load(f)
+            
+            # Identify AQI column index for exclusion during prediction (Scaler needs it, Model doesn't)
+            self.aqi_index = None
+            if self.feature_cols and "AQI" in self.feature_cols:
+                self.aqi_index = self.feature_cols.index("AQI")
+                print(
+                    f"Target 'AQI' found at index {self.aqi_index} - will be handled during prediction"
+                )
+            
+            if self.feature_cols:
+                print(f"Feature columns loaded ({len(self.feature_cols)} features)")
+                
+        except FileNotFoundError:
+             print("WARNING: Feature columns not found")
+             self.feature_cols = None
+        except Exception as e:
+            print(f"WARNING: Error loading feature columns: {e}")
+            self.feature_cols = None
 
     def prepare_features_from_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """
