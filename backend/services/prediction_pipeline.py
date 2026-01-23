@@ -33,6 +33,7 @@ class AQIPredictor:
         """Initialize predictor with trained models"""
         # Fix path to work from backend directory
         import os
+
         if not os.path.isabs(models_dir):
             # Get project root (parent of backend)
             project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -77,7 +78,7 @@ class AQIPredictor:
                 # Try loading Keras 3 format first, then fall back to H5
                 lstm_path_keras = f"{self.models_dir}/lstm_model.keras"
                 lstm_path_h5 = f"{self.models_dir}/lstm_model.h5"
-                
+
                 if os.path.exists(lstm_path_keras):
                     self.models["lstm"] = keras.models.load_model(lstm_path_keras)
                     print("LSTM loaded (Keras 3 format)")
@@ -87,7 +88,7 @@ class AQIPredictor:
                     self.models["lstm"].compile(
                         optimizer=keras.optimizers.Adam(learning_rate=0.001),
                         loss="mse",
-                        metrics=["mae"]
+                        metrics=["mae"],
                     )
                     print("LSTM loaded (H5 format, recompiled)")
                 else:
@@ -110,13 +111,15 @@ class AQIPredictor:
         # Load feature columns
         with open(f"{self.models_dir}/feature_columns.pkl", "rb") as f:
             self.feature_cols = pickle.load(f)
-        
+
         # Identify AQI column index for exclusion during prediction (Scaler needs it, Model doesn't)
         self.aqi_index = None
         if "AQI" in self.feature_cols:
             self.aqi_index = self.feature_cols.index("AQI")
-            print(f"Target 'AQI' found at index {self.aqi_index} - will be handled during prediction")
-            
+            print(
+                f"Target 'AQI' found at index {self.aqi_index} - will be handled during prediction"
+            )
+
         print(f"Feature columns loaded ({len(self.feature_cols)} features)")
 
     def prepare_features_from_data(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -201,25 +204,29 @@ class AQIPredictor:
             # Scale the sequence
             # features shape: (lookback, n_features)
             features_scaled = self.scaler.transform(features)
-            
+
             # Remove AQI column from sequence if needed (Scaler used 67, Model needs 66)
             if self.aqi_index is not None:
                 features_scaled = np.delete(features_scaled, self.aqi_index, axis=1)
-            
+
             # Reshape for model input: (1, lookback, n_features_reduced)
-            input_seq = features_scaled.reshape(1, features.shape[0], features.shape[1] - 1 if self.aqi_index is not None else features.shape[1])
-            
+            input_seq = features_scaled.reshape(
+                1,
+                features.shape[0],
+                features.shape[1] - 1 if self.aqi_index is not None else features.shape[1],
+            )
+
             prediction = self.models[model_name].predict(input_seq, verbose=0)[0][0]
         else:
             # Traditional ML models (Random Forest, XGBoost) take 1D features
-            
+
             # Scale features
             features_scaled = self.scaler.transform(features.reshape(1, -1))
-            
+
             # Remove AQI column if needed
             if self.aqi_index is not None:
                 features_scaled = np.delete(features_scaled, self.aqi_index, axis=1)
-            
+
             prediction = self.models[model_name].predict(features_scaled)[0]
 
         return max(0, prediction)  # AQI can't be negative
@@ -258,15 +265,17 @@ class AQIPredictor:
             target_time = last_timestamp + timedelta(hours=h)
 
             # Retrieve feature vector(s)
-            
+
             if model_name == "lstm" and self.lstm_lookback:
                 # LSTM requires a sequence of the last 'lookback' rows
                 if len(current_df) < self.lstm_lookback:
-                    raise ValueError(f"Insufficient history for LSTM. Need {self.lstm_lookback} rows.")
-                
+                    raise ValueError(
+                        f"Insufficient history for LSTM. Need {self.lstm_lookback} rows."
+                    )
+
                 # Get last N rows
-                seq_df = current_df.iloc[-self.lstm_lookback:]
-                
+                seq_df = current_df.iloc[-self.lstm_lookback :]
+
                 # Build 2D feature array
                 seq_vectors = []
                 for _, row in seq_df.iterrows():
@@ -277,9 +286,9 @@ class AQIPredictor:
                         else:
                             vec.append(0)
                     seq_vectors.append(vec)
-                
-                feature_vector = np.array(seq_vectors) # (24, n_features)
-                
+
+                feature_vector = np.array(seq_vectors)  # (24, n_features)
+
             else:
                 # RF/XGB use only the latest row
                 last_row = current_df.iloc[-1]
@@ -303,7 +312,7 @@ class AQIPredictor:
             # Create new row with predicted AQI and updated temporal features
             # Base it on the PREVIOUS timestamp (last_row of current_df) + 1 hour
             # Note: target_time IS last_timestamp + h, which is correct
-            
+
             previous_row = current_df.iloc[-1]
             new_row = previous_row.copy()
             new_row.name = target_time

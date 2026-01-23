@@ -68,7 +68,11 @@ class LSTMAQIModel:
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=0.001, clipnorm=1.0),
             loss="mse",  # Mean squared error for regression
-            metrics=["mae", keras.metrics.MeanSquaredError(name='mse'), keras.metrics.RootMeanSquaredError(name='rmse')],
+            metrics=[
+                "mae",
+                keras.metrics.MeanSquaredError(name="mse"),
+                keras.metrics.RootMeanSquaredError(name="rmse"),
+            ],
         )
 
         self.model = model
@@ -103,8 +107,8 @@ class LSTMAQIModel:
         self.feature_columns = available_cols
 
         # Extract features and target
-        X_data = data[available_cols].fillna(method='ffill').fillna(method='bfill').fillna(0).values
-        y_data = data["AQI"].fillna(method='ffill').fillna(method='bfill').values.reshape(-1, 1)
+        X_data = data[available_cols].fillna(method="ffill").fillna(method="bfill").fillna(0).values
+        y_data = data["AQI"].fillna(method="ffill").fillna(method="bfill").values.reshape(-1, 1)
 
         # Scale data
         X_scaled = self.scaler_X.fit_transform(X_data)
@@ -244,29 +248,20 @@ class LSTMAQIModel:
 
             # Callbacks - adjusted for better training
             early_stop = callbacks.EarlyStopping(
-                monitor="val_loss", 
-                patience=20, 
-                restore_best_weights=True,
-                min_delta=0.001
+                monitor="val_loss", patience=20, restore_best_weights=True, min_delta=0.001
             )
 
             reduce_lr = callbacks.ReduceLROnPlateau(
-                monitor="val_loss", 
-                factor=0.5, 
-                patience=7, 
-                min_lr=1e-6,
-                verbose=1
+                monitor="val_loss", factor=0.5, patience=7, min_lr=1e-6, verbose=1
             )
 
             # Ensure models directory exists
             import os
+
             os.makedirs("models", exist_ok=True)
-            
+
             checkpoint = callbacks.ModelCheckpoint(
-                "models/lstm_model.h5", 
-                monitor="val_loss", 
-                save_best_only=True, 
-                verbose=1
+                "models/lstm_model.h5", monitor="val_loss", save_best_only=True, verbose=1
             )
 
             # Train model
@@ -280,17 +275,18 @@ class LSTMAQIModel:
                 callbacks=[early_stop, reduce_lr, checkpoint],
                 verbose=1,
             )
-            
+
             # Save final model in Keras 3 format
             self.model.save("models/lstm_model.keras")
             print("✅ Model saved in Keras 3 format")
 
             # Save config
             import json
+
             config = {
                 "lookback": self.sequence_length,
                 "features": self.features,
-                "feature_columns": self.feature_columns
+                "feature_columns": self.feature_columns,
             }
             with open("models/lstm_config.json", "w") as f:
                 json.dump(config, f, indent=2)
@@ -313,6 +309,7 @@ class LSTMAQIModel:
         except Exception as e:
             print(f"❌ Training error: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 

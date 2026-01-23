@@ -29,7 +29,7 @@ class AirQualityDatabase:
         self.mongo_uri = os.getenv("MONGODB_URI")
         self.db_name = os.getenv("MONGODB_DATABASE", "pearl_aqi_db")
         self.connected = False
-        
+
         if not self.mongo_uri:
             print("⚠️ MONGODB_URI not found - running in OFFLINE mode")
             self.client = None
@@ -46,36 +46,36 @@ class AirQualityDatabase:
         """Connect to MongoDB Atlas with retry logic and graceful fallback"""
         max_retries = 3
         retry_delay = 1  # seconds
-        
+
         for attempt in range(max_retries):
             try:
                 print(f"🔄 Connecting to MongoDB Atlas (attempt {attempt + 1}/{max_retries})...")
-                
+
                 # Reduced timeouts for faster failure detection
                 self.client = MongoClient(
                     self.mongo_uri,
                     serverSelectionTimeoutMS=3000,  # 3 seconds
                     connectTimeoutMS=3000,
-                    socketTimeoutMS=3000
+                    socketTimeoutMS=3000,
                 )
-                
+
                 # Test connection with ping
                 self.client.admin.command("ping")
                 self.db = self.client[self.db_name]
                 self.connected = True
                 print(f"✅ Connected to MongoDB Atlas: {self.db_name}")
                 return
-                
+
             except (ConnectionFailure, ConfigurationError) as e:
                 error_msg = str(e)
-                
+
                 if "DNS" in error_msg or "resolution" in error_msg:
                     print(f"⚠️ DNS resolution failed - check internet connection")
                 elif "timed out" in error_msg:
                     print(f"⚠️ Connection timeout - network issue detected")
                 else:
                     print(f"⚠️ Connection failed: {error_msg[:100]}")
-                
+
                 if attempt < max_retries - 1:
                     print(f"   Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
@@ -141,7 +141,7 @@ class AirQualityDatabase:
         if not self.connected:
             print("⚠️ Skipping insert (offline mode)")
             return
-        
+
         try:
             # Convert DataFrame to list of dictionaries
             records = data.reset_index().to_dict("records")
@@ -199,7 +199,7 @@ class AirQualityDatabase:
         if not self.connected:
             print("⚠️ Skipping insert (offline mode)")
             return
-        
+
         try:
             document = {
                 "timestamp": data.get("timestamp", datetime.now()),
@@ -258,7 +258,7 @@ class AirQualityDatabase:
         if not self.connected:
             print("⚠️ Skipping insert (offline mode)")
             return
-        
+
         try:
             document = {
                 "prediction_timestamp": prediction_timestamp,
@@ -290,7 +290,7 @@ class AirQualityDatabase:
         if not self.connected:
             print("⚠️ Cannot fetch data (offline mode)")
             return pd.DataFrame()
-        
+
         try:
             cutoff_time = datetime.now() - timedelta(hours=hours)
 
@@ -322,7 +322,7 @@ class AirQualityDatabase:
         if not self.connected:
             print("⚠️ Cannot fetch predictions (offline mode)")
             return pd.DataFrame()
-        
+
         try:
             now = datetime.now()
             future_time = now + timedelta(days=days)
@@ -352,11 +352,8 @@ class AirQualityDatabase:
     def get_data_statistics(self) -> Dict:
         """Get statistics about stored data"""
         if not self.connected:
-            return {
-                "status": "offline",
-                "message": "Database unavailable"
-            }
-        
+            return {"status": "offline", "message": "Database unavailable"}
+
         try:
             stats = {
                 "historical": {
@@ -402,7 +399,7 @@ class AirQualityDatabase:
         if not self.connected:
             print("⚠️ Cannot cleanup (offline mode)")
             return
-        
+
         try:
             cutoff_date = datetime.now() - timedelta(days=keep_days)
 

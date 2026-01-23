@@ -169,32 +169,31 @@ class AQIModelTrainer:
         print(f"LSTM Test shape: {X_test_seq.shape}")
 
         # Build LSTM model - Enhanced for >90% Accuracy
-        from tensorflow.keras.layers import Bidirectional, BatchNormalization
-        from tensorflow.keras.optimizers import Adam
         from tensorflow.keras.callbacks import ReduceLROnPlateau
+        from tensorflow.keras.layers import BatchNormalization, Bidirectional
+        from tensorflow.keras.optimizers import Adam
 
         model = Sequential(
             [
                 # First Bidirectional LSTM layer
-                Bidirectional(LSTM(128, return_sequences=True), input_shape=(lookback, X_train.shape[1])),
+                Bidirectional(
+                    LSTM(128, return_sequences=True), input_shape=(lookback, X_train.shape[1])
+                ),
                 BatchNormalization(),
                 Dropout(0.3),
-                
                 # Second Bidirectional LSTM layer
                 Bidirectional(LSTM(128, return_sequences=True)),
                 BatchNormalization(),
                 Dropout(0.3),
-
                 # Third LSTM layer
                 LSTM(64, return_sequences=False),
                 BatchNormalization(),
                 Dropout(0.3),
-
                 # Dense layers
                 Dense(64, activation="relu"),
                 Dropout(0.2),
                 Dense(32, activation="relu"),
-                Dense(1), # Linear activation for regression
+                Dense(1),  # Linear activation for regression
             ]
         )
 
@@ -212,7 +211,7 @@ class AQIModelTrainer:
             "models/best_lstm_model.h5", save_best_only=True, monitor="val_loss"
         )
         reduce_lr = ReduceLROnPlateau(
-            monitor='val_loss', factor=0.5, patience=10, min_lr=0.00001, verbose=1
+            monitor="val_loss", factor=0.5, patience=10, min_lr=0.00001, verbose=1
         )
 
         # Train
@@ -220,8 +219,8 @@ class AQIModelTrainer:
             X_train_seq,
             y_train_seq,
             validation_data=(X_test_seq, y_test_seq),
-            epochs=200,                # Increased epochs
-            batch_size=32,             # Smaller batch size for better generalization
+            epochs=200,  # Increased epochs
+            batch_size=32,  # Smaller batch size for better generalization
             callbacks=[early_stop, checkpoint, reduce_lr],
             verbose=1,
         )

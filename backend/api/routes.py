@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from backend.services.api_fetcher import AirQualityAPIFetcher
 from backend.api.models import (
     AirQualityData,
     ExplainabilityResponse,
@@ -22,6 +21,7 @@ from backend.api.models import (
     PredictionResponse,
 )
 from backend.core.database import get_database
+from backend.services.api_fetcher import AirQualityAPIFetcher
 from backend.services.prediction_service import PredictionService
 from backend.services.shap_service import SHAPService
 
