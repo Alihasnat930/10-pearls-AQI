@@ -100,7 +100,7 @@ class AQIPredictor:
                     with open(f"{self.models_dir}/lstm_config.json", "r") as f:
                         config = json.load(f)
                         self.lstm_lookback = config["lookback"]
-                    
+
             except Exception as e:
                 print(f"⚠ LSTM not loaded: {e}")
         else:
@@ -112,18 +112,17 @@ class AQIPredictor:
                 self.scaler = pickle.load(f)
             print("Scaler loaded")
         except FileNotFoundError:
-             print("WARNING: Scaler not found - Prediction will not work")
-             self.scaler = None
+            print("WARNING: Scaler not found - Prediction will not work")
+            self.scaler = None
         except Exception as e:
             print(f"WARNING: Error loading scaler: {e}")
             self.scaler = None
-
 
         # Load feature columns
         try:
             with open(f"{self.models_dir}/feature_columns.pkl", "rb") as f:
                 self.feature_cols = pickle.load(f)
-            
+
             # Identify AQI column index for exclusion during prediction (Scaler needs it, Model doesn't)
             self.aqi_index = None
             if self.feature_cols and "AQI" in self.feature_cols:
@@ -131,13 +130,13 @@ class AQIPredictor:
                 print(
                     f"Target 'AQI' found at index {self.aqi_index} - will be handled during prediction"
                 )
-            
+
             if self.feature_cols:
                 print(f"Feature columns loaded ({len(self.feature_cols)} features)")
-                
+
         except FileNotFoundError:
-             print("WARNING: Feature columns not found")
-             self.feature_cols = None
+            print("WARNING: Feature columns not found")
+            self.feature_cols = None
         except Exception as e:
             print(f"WARNING: Error loading feature columns: {e}")
             self.feature_cols = None
