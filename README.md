@@ -7,6 +7,12 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.0+-brightgreen.svg)](https://www.mongodb.com/)
 
+## 🎥 Project Demo
+
+[![Watch the Demo](https://img.youtube.com/vi/QHX9YqBC00Q/maxresdefault.jpg)](https://youtu.be/QHX9YqBC00Q)
+
+> Click the image above to watch the comprehensive demo of the platform.
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
