@@ -1,0 +1,112 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pearl-aqi"
+version = "2.0.0"
+description = "AI-Powered Air Quality Forecasting with SHAP Explainability"
+readme = "README_V2.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Pearl AQI Team", email = "support@pearl-aqi.com"}
+]
+keywords = ["air-quality", "aqi", "machine-learning", "forecasting", "shap", "fastapi", "streamlit"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/pearl-aqi"
+Documentation = "https://github.com/yourusername/pearl-aqi/blob/main/README_V2.md"
+Repository = "https://github.com/yourusername/pearl-aqi.git"
+Issues = "https://github.com/yourusername/pearl-aqi/issues"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | \.venv_tf
+  | \.venv_ui
+  | __pycache__
+  | build
+  | dist
+  | data
+  | models
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip = [".venv", ".venv_tf", ".venv_ui", "__pycache__", "data", "models"]
+known_first_party = ["backend", "frontend", "ml_models"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.flake8]
+max-line-length = 100
+exclude = [".venv", ".venv_tf", ".venv_ui", "__pycache__", "data", "models"]
+ignore = ["E203", "W503", "E501"]
+per-file-ignores = [
+    "__init__.py:F401",
+    "*/tests/*:F401,F811",
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--cov=backend",
+    "--cov=ml_models",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+
+[tool.coverage.run]
+source = ["backend", "ml_models"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+exclude = [
+    "venv",
+    ".venv",
+    "build",
+    "dist",
+]

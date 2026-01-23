@@ -1,0 +1,13 @@
+{
+    "api_keys": {
+        "openweathermap": "2139715b6a745bde80c2658c7904799e",
+        "waqi": "YOUR_WAQI_API_KEY"
+    },
+    "default_location": {
+        "city": "London",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "country": "UK"
+    },
+    "update_interval_minutes": 60
+}
