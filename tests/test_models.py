@@ -22,7 +22,8 @@ def test_model_loading(mock_open, mock_pickle_load):
     """Test model loading with mocks"""
     print("Testing model loading...")
     
-    # Mock mocks
+    # Mock open and pickle load
+    mock_open.return_value.__enter__.return_value = MagicMock()
     mock_pickle_load.return_value = MagicMock()
     
     # We need to mock os.path.exists too if the class uses it to check for files
