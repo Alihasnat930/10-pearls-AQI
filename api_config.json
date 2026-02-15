@@ -1,6 +1,6 @@
 {
     "api_keys": {
-        "openweathermap": "2139715b6a745bde80c2658c7904799e",
+        "openweathermap": "YOUR_OPENWEATHERMAP_API_KEY",
         "waqi": "YOUR_WAQI_API_KEY"
     },
     "default_location": {

@@ -214,6 +214,38 @@ st.markdown(
         margin-bottom: 2rem;
     }
 
+    /* Static tables styling (st.table) */
+    .stTable table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .stTable th, .stTable td {
+        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .stTable th {
+        color: #c8e6c9 !important;
+        background: rgba(76, 175, 80, 0.12);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.78rem;
+    }
+
+    .stTable tbody tr:nth-child(even) td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .stTable tbody tr:hover td {
+        background: rgba(76, 175, 80, 0.08);
+    }
+
     
     /* Modern Glass Cards */
     div[data-testid="metric-container"] {
@@ -709,10 +741,10 @@ class EnhancedAQIDashboard:
 
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🔄 Refresh", width="stretch"):
+                if st.button("🔄 Refresh", use_container_width=True):
                     st.rerun()
             with col2:
-                if st.button("📡 Fetch Data", width="stretch"):
+                if st.button("📡 Fetch Data", use_container_width=True):
                     with st.spinner("Fetching..."):
                         data = self.api_fetcher.fetch_combined_data()
                         if not data:
@@ -1002,7 +1034,6 @@ class EnhancedAQIDashboard:
         
         # If still insufficient, generate mock historical data
         if len(recent_data) < 50:
-            st.info("📊 Generating synthetic historical data for forecasting demo...")
             with st.spinner("Creating 72 hours of historical data..."):
                 # Generate 72 hours of mock historical data
                 mock_data_list = []
@@ -1032,7 +1063,6 @@ class EnhancedAQIDashboard:
                     mock_data_list.append(mock_data)
                 
                 recent_data = pd.DataFrame(mock_data_list)
-                st.success(f"✅ Generated {len(recent_data)} hours of historical data")
 
         if not recent_data.empty:
             # Generate forecast
@@ -1162,13 +1192,8 @@ class EnhancedAQIDashboard:
 
                     daily_summary.columns = ["Min AQI", "Max AQI", "Avg AQI", "Category"]
 
-                    # Style the dataframe
-                    st.dataframe(
-                        daily_summary.style.background_gradient(
-                            cmap="RdYlGn_r", subset=["Min AQI", "Max AQI", "Avg AQI"]
-                        ),
-                        use_container_width=True,
-                    )
+                    # Use static table to avoid scroll
+                    st.table(daily_summary)
 
                     # Key insights
                     st.markdown("### 🔍 Key Insights")
@@ -1689,12 +1714,8 @@ class EnhancedAQIDashboard:
         display_df = df[display_cols].copy()
         display_df.columns = ["City", "AQI", "Temp (°C)", "Hum (%)", "Wind (m/s)"] + avail_pollutants
         
-        # Format
-        st.dataframe(
-            display_df.style.background_gradient(subset=["AQI"], cmap="RdYlGn_r", low=0, high=1)
-            .format("{:.1f}", subset=["AQI", "Temp (°C)", "Wind (m/s)"] + avail_pollutants),
-            use_container_width=True
-        )
+        # Use static table to avoid scroll
+        st.table(display_df)
 
     def run(self):
         """Run the enhanced dashboard"""

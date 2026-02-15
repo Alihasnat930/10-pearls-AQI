@@ -12,7 +12,12 @@ echo ================================================
 echo.
 
 REM Check if virtual environment exists
-if not exist ".venv\Scripts\activate.bat" (
+set "ROOT=%CD%"
+set "VENV_DIR=%ROOT%\.venv"
+if exist "%ROOT%\.venv_tf\Scripts\activate.bat" set "VENV_DIR=%ROOT%\.venv_tf"
+set "VENV_ACTIVATE=%VENV_DIR%\Scripts\activate.bat"
+
+if not exist "%VENV_ACTIVATE%" (
     echo [SETUP] Creating virtual environment...
     python -m venv .venv
     if errorlevel 1 (
@@ -22,7 +27,7 @@ if not exist ".venv\Scripts\activate.bat" (
         exit /b 1
     )
     
-    call .venv\Scripts\activate.bat
+    call "%VENV_ACTIVATE%"
     echo.
     echo [SETUP] Installing dependencies...
     python -m pip install --upgrade pip
@@ -38,7 +43,7 @@ if not exist ".venv\Scripts\activate.bat" (
 )
 
 REM Activate virtual environment
-call .venv\Scripts\activate.bat
+call "%VENV_ACTIVATE%"
 
 echo [INFO] Starting Full Stack Application...
 echo.
@@ -48,13 +53,13 @@ echo   - Frontend Dashboard at http://localhost:8502
 echo.
 
 REM Start backend in a new window
-start "Pearl AQI - Backend API" cmd /k "cd /d "%CD%" && call .venv\Scripts\activate.bat && cd backend && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+start "Pearl AQI - Backend API" cmd /k "cd /d "%ROOT%\backend" && call "%VENV_ACTIVATE%" && python main.py"
 
 echo [INFO] Waiting for backend to start...
 timeout /t 5 /nobreak >nul
 
 REM Start frontend in a new window
-start "Pearl AQI - Dashboard" cmd /k "cd /d "%CD%" && call .venv\Scripts\activate.bat && streamlit run frontend\dashboard_enhanced.py --server.port 8502 --server.headless false"
+start "Pearl AQI - Dashboard" cmd /k "cd /d "%ROOT%" && call "%VENV_ACTIVATE%" && python -m streamlit run frontend\dashboard_enhanced.py --server.port 8502 --server.headless false"
 
 echo.
 echo ================================================

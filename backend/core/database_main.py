@@ -21,13 +21,27 @@ warnings.filterwarnings("ignore")
 load_dotenv()
 
 
+def _get_secret(key: str, default: str = "") -> str:
+    """Read from env, then Streamlit secrets when available."""
+    value = os.getenv(key)
+    if value:
+        return value
+    try:
+        import streamlit as st
+    except Exception:
+        return default
+    if hasattr(st, "secrets") and key in st.secrets:
+        return str(st.secrets[key])
+    return default
+
+
 class AirQualityDatabase:
     """MongoDB Atlas database manager for air quality data - Cloud Feature Store"""
 
     def __init__(self):
         """Initialize MongoDB connection with retry logic and graceful degradation"""
-        self.mongo_uri = os.getenv("MONGODB_URI")
-        self.db_name = os.getenv("MONGODB_DATABASE", "pearl_aqi_db")
+        self.mongo_uri = _get_secret("MONGODB_URI")
+        self.db_name = _get_secret("MONGODB_DATABASE", "pearl_aqi_db")
         self.connected = False
 
         if not self.mongo_uri:

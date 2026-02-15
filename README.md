@@ -13,6 +13,10 @@
 
 > Click the image above to watch the comprehensive demo of the platform.
 
+## 🌐 Live App
+
+[Streamlit Live Dashboard](https://alihasnat930-10-pearls-aqi-frontenddashboard-enhanced-xxsleq.streamlit.app/)
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
@@ -169,6 +173,17 @@ WAQI_API_KEY=your_waqi_api_key_here
 # Application Settings
 ENV=production
 DEBUG=False
+```
+
+### Streamlit Secrets (Cloud Deployment)
+
+For Streamlit Cloud, add these keys in **App Settings → Secrets**:
+
+```toml
+MONGODB_URI = "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority"
+MONGODB_DATABASE = "pearl_aqi_db"
+OPENWEATHER_API_KEY = "your_openweather_api_key_here"
+WAQI_API_KEY = "your_waqi_api_key_here"
 ```
 
 ### Step 5: Run Initial Setup

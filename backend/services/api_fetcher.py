@@ -5,6 +5,7 @@ Supports: OpenWeatherMap, AQI CN, WAQI (World Air Quality Index)
 """
 
 import json
+import os
 import time
 from datetime import datetime
 from typing import Dict, Optional
@@ -20,6 +21,27 @@ class AirQualityAPIFetcher:
         self.config = self._load_config(config_file)
         self.api_keys = self.config.get("api_keys", {})
         self.location = self.config.get("default_location", {})
+
+        owm_key = self._get_secret("OPENWEATHER_API_KEY")
+        if owm_key:
+            self.api_keys["openweathermap"] = owm_key
+
+        waqi_key = self._get_secret("WAQI_API_KEY")
+        if waqi_key:
+            self.api_keys["waqi"] = waqi_key
+
+    def _get_secret(self, key: str, default: str = "") -> str:
+        """Read from env, then Streamlit secrets when available."""
+        value = os.getenv(key)
+        if value:
+            return value
+        try:
+            import streamlit as st
+        except Exception:
+            return default
+        if hasattr(st, "secrets") and key in st.secrets:
+            return str(st.secrets[key])
+        return default
 
     def set_location(
         self, city: str = None, latitude: float = None, longitude: float = None, country: str = None
