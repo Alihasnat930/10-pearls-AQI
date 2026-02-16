@@ -118,28 +118,57 @@ class AQIPredictor:
             print(f"WARNING: Error loading scaler: {e}")
             self.scaler = None
 
-        # Load feature columns
+        # Load feature columns with fallback logic
+        self.feature_cols = None
+        
+        # Try 1: Load from pickle (binary format)
         try:
             with open(f"{self.models_dir}/feature_columns.pkl", "rb") as f:
                 self.feature_cols = pickle.load(f)
-
-            # Identify AQI column index for exclusion during prediction (Scaler needs it, Model doesn't)
-            self.aqi_index = None
-            if self.feature_cols and "AQI" in self.feature_cols:
-                self.aqi_index = self.feature_cols.index("AQI")
-                print(
-                    f"Target 'AQI' found at index {self.aqi_index} - will be handled during prediction"
-                )
-
-            if self.feature_cols:
-                print(f"Feature columns loaded ({len(self.feature_cols)} features)")
-
+            print(f"✓ Feature columns loaded from pickle ({len(self.feature_cols)} features)")
         except FileNotFoundError:
-            print("WARNING: Feature columns not found")
-            self.feature_cols = None
+            pass  # Try next method
         except Exception as e:
-            print(f"WARNING: Error loading feature columns: {e}")
-            self.feature_cols = None
+            print(f"⚠ Error loading feature_columns.pkl: {e}")
+        
+        # Try 2: Load from text file (fallback)
+        if self.feature_cols is None:
+            try:
+                # Try in models directory first
+                txt_path = f"{self.models_dir}/feature_columns.txt"
+                if not os.path.exists(txt_path):
+                    # Try in project root (for Streamlit Cloud)
+                    project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                    txt_path = os.path.join(project_root, "feature_columns.txt")
+                
+                if os.path.exists(txt_path):
+                    with open(txt_path, "r") as f:
+                        self.feature_cols = [line.strip() for line in f.readlines() if line.strip()]
+                    print(f"✓ Feature columns loaded from text file ({len(self.feature_cols)} features)")
+            except Exception as e:
+                print(f"⚠ Error loading feature_columns.txt: {e}")
+        
+        # Try 3: Generate default features (last resort)
+        if self.feature_cols is None:
+            print("⚠ Feature columns not found - using default feature set")
+            self.feature_cols = [
+                "CO(GT)", "NMHC(GT)", "C6H6(GT)", "NOx(GT)", "NO2(GT)",
+                "T", "RH", "AH", "Hour", "DayOfWeek", "Month", "DayOfMonth",
+                "Hour_sin", "Hour_cos", "Month_sin", "Month_cos",
+                "DayOfWeek_sin", "DayOfWeek_cos",
+                "AQI_lag_1h", "AQI_lag_6h", "AQI_lag_12h", "AQI_lag_24h",
+                "AQI"  # Target variable
+            ]
+        
+        # Identify AQI column index for exclusion during prediction
+        self.aqi_index = None
+        if self.feature_cols and "AQI" in self.feature_cols:
+            self.aqi_index = self.feature_cols.index("AQI")
+            print(f"✓ Target 'AQI' found at index {self.aqi_index}")
+        
+        if not self.feature_cols:
+            print("⚠ CRITICAL: No feature columns available - forecasting will fail!")
+            self.feature_cols = []  # Ensure it's not None to prevent TypeError
 
     def prepare_features_from_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -259,6 +288,13 @@ class AQIPredictor:
         """
         print(f"\nStarting recursive forecast for {hours_ahead} hours ({hours_ahead//24} days)...")
         print(f"Model: {model_name}")
+        
+        # CRITICAL CHECK: Ensure feature columns are loaded
+        if not self.feature_cols or len(self.feature_cols) == 0:
+            raise ValueError(
+                "Feature columns not available. Forecast cannot proceed. "
+                "Ensure feature_columns.pkl or feature_columns.txt exists in models directory."
+            )
 
         # Prepare initial features
         df_features = self.prepare_features_from_data(initial_data)
@@ -299,11 +335,12 @@ class AQIPredictor:
                 seq_vectors = []
                 for _, row in seq_df.iterrows():
                     vec = []
-                    for col in self.feature_cols:
-                        if col in row:
-                            vec.append(row[col])
-                        else:
-                            vec.append(0)
+                    if self.feature_cols:  # Guard against None
+                        for col in self.feature_cols:
+                            if col in row:
+                                vec.append(row[col])
+                            else:
+                                vec.append(0)
                     seq_vectors.append(vec)
 
                 feature_vector = np.array(seq_vectors)  # (24, n_features)
@@ -312,11 +349,12 @@ class AQIPredictor:
                 # RF/XGB use only the latest row
                 last_row = current_df.iloc[-1]
                 feature_vector = []
-                for col in self.feature_cols:
-                    if col in last_row:
-                        feature_vector.append(last_row[col])
-                    else:
-                        feature_vector.append(0)  # Default value for missing features
+                if self.feature_cols:  # Guard against None
+                    for col in self.feature_cols:
+                        if col in last_row:
+                            feature_vector.append(last_row[col])
+                        else:
+                            feature_vector.append(0)  # Default value for missing features
                 feature_vector = np.array(feature_vector)
 
             # Predict

@@ -1227,10 +1227,40 @@ class EnhancedAQIDashboard:
                         st.metric("📊 Average AQI", f"{avg_aqi:.1f}")
 
                 except Exception as e:
-                    st.error(f"Forecast generation failed: {e}")
-                    import traceback
+                    error_msg = str(e)
+                    
+                    # Provide specific guidance for feature columns error
+                    if "Feature columns" in error_msg or "not iterable" in error_msg:
+                        st.error("❌ Forecast generation failed: Feature columns not loaded")
+                        with st.expander("📋 Troubleshooting"):
+                            st.markdown("""
+### Why is this happening?
+The machine learning models require feature columns to generate predictions, but they're not loading properly.
 
-                    st.code(traceback.format_exc())
+### How to fix it:
+1. **For local development:**
+   - Ensure `models/feature_columns.pkl` exists
+   - Or use `feature_columns.txt` as fallback
+   - Run: `python scripts/train_models.py` to regenerate
+
+2. **For deployed app:**
+   - Ensure all model files are included in deployment
+   - Check that `models/` directory exists with these files:
+     - `feature_columns.pkl` or `feature_columns.txt`
+     - `xgboost_model.pkl`
+     - `random_forest_model.pkl`
+     - `scaler.pkl`
+   - For Streamlit Cloud: Push changes and redeploy
+
+3. **Temporary workaround:**
+   - Use mock data for now (forecasts will be generated once files are fixed)
+                            """)
+                    else:
+                        st.error(f"❌ Forecast generation failed: {error_msg}")
+                        with st.expander("📋 Technical Details"):
+                            import traceback
+                            st.code(traceback.format_exc())
+
 
     def display_trends_tab(self):
         """Display historical trends and analytics"""
