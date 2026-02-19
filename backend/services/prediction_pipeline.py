@@ -57,21 +57,27 @@ class AQIPredictor:
         except Exception as e:
             print(f"WARNING: Random Forest not loaded: {e}")
 
+        # Load XGBoost
+        # Try pickle first (preferred for consistent environment)
+        xgb_loaded = False
         try:
-            # Load XGBoost
-            # Try pickle first (preferred for consistent environment)
+            with open(f"{self.models_dir}/xgboost_model.pkl", "rb") as f:
+                self.models["xgboost"] = pickle.load(f)
+            print("XGBoost loaded (pickle)")
+            xgb_loaded = True
+        except Exception as e:
+            print(f"WARNING: XGBoost pickle load failed: {e}")
+        if not xgb_loaded:
             try:
-                with open(f"{self.models_dir}/xgboost_model.pkl", "rb") as f:
-                    self.models["xgboost"] = pickle.load(f)
-                print("XGBoost loaded (pickle)")
-            except FileNotFoundError:
-                # Fallback to legacy JSON
                 xgb_model = xgb.XGBRegressor()
                 xgb_model.load_model(f"{self.models_dir}/xgboost_model.json")
                 self.models["xgboost"] = xgb_model
                 print("XGBoost loaded (JSON)")
-        except Exception as e:
-            print(f"WARNING: XGBoost not loaded: {e}")
+                xgb_loaded = True
+            except Exception as e:
+                print(f"WARNING: XGBoost JSON load failed: {e}")
+        if not xgb_loaded:
+            print("WARNING: XGBoost not loaded: both pickle and JSON failed.")
 
         if TENSORFLOW_AVAILABLE:
             try:
