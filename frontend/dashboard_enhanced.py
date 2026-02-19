@@ -741,10 +741,10 @@ class EnhancedAQIDashboard:
 
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("🔄 Refresh", use_container_width=True):
+                if st.button("🔄 Refresh", width='stretch'):
                     st.rerun()
             with col2:
-                if st.button("📡 Fetch Data", use_container_width=True):
+                if st.button("📡 Fetch Data", width='stretch'):
                     with st.spinner("Fetching..."):
                         data = self.api_fetcher.fetch_combined_data()
                         if not data:
@@ -922,7 +922,7 @@ class EnhancedAQIDashboard:
                     yaxis=dict(showgrid=True, gridcolor="#e8f5e9", linecolor="#2e7d32"),
                 )
 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
             # Health recommendations
             st.markdown("---")
@@ -1168,7 +1168,7 @@ class EnhancedAQIDashboard:
                     fig.update_xaxes(showgrid=True, gridcolor="#e8f5e9")
                     fig.update_yaxes(showgrid=True, gridcolor="#e8f5e9")
 
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
                     # Daily summary
                     st.markdown("---")
@@ -1326,7 +1326,7 @@ The machine learning models require feature columns to generate predictions, but
             yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)", linecolor="#2e7d32"),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Statistics
         st.markdown("---")
@@ -1376,7 +1376,7 @@ The machine learning models require feature columns to generate predictions, but
                 yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)", linecolor="#2e7d32"),
             )
 
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, width='stretch')
 
         with col2:
             st.markdown("### 🥧 Category Breakdown")
@@ -1422,7 +1422,7 @@ The machine learning models require feature columns to generate predictions, but
                 height=400, paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#e8f5e9", size=12)
             )
 
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie, width='stretch')
 
         # Pollutant correlation
         st.markdown("---")
@@ -1457,7 +1457,7 @@ The machine learning models require feature columns to generate predictions, but
                 font=dict(color="#e8f5e9", size=12),
             )
 
-            st.plotly_chart(fig_corr, use_container_width=True)
+            st.plotly_chart(fig_corr, width='stretch')
 
     def display_insights_tab(self):
         """Display AI insights and feature importance"""
@@ -1559,7 +1559,7 @@ The machine learning models require feature columns to generate predictions, but
             yaxis=dict(showgrid=False, linecolor="#2e7d32"),
         )
 
-        st.plotly_chart(fig_importance, use_container_width=True)
+        st.plotly_chart(fig_importance, width='stretch')
 
         st.markdown("---")
 
@@ -1703,7 +1703,7 @@ The machine learning models require feature columns to generate predictions, but
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             fig_aqi.update_traces(textposition='outside')
-            st.plotly_chart(fig_aqi, use_container_width=True)
+            st.plotly_chart(fig_aqi, width='stretch')
 
         # Detailed Pollutant Analysis
         st.markdown("### 🔬 Pollutant Breakdown")
@@ -1734,7 +1734,7 @@ The machine learning models require feature columns to generate predictions, but
                 xaxis_title=None,
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
             )
-            st.plotly_chart(fig_pol, use_container_width=True)
+            st.plotly_chart(fig_pol, width='stretch')
             
         # Detailed Data Table
         st.markdown("### 📋 Detailed Metrics")
