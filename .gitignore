@@ -51,9 +51,9 @@ database_sqlite_backup.py
 *.ipynb_checkpoints/
 
 # Model files (too large for git)
-models/*.h5
-models/*.pkl
-models/*.json
+# models/*.h5
+# models/*.pkl
+# models/*.json
 
 # Data files (too large for git)
 *.csv
