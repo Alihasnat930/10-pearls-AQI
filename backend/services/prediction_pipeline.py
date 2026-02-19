@@ -68,16 +68,27 @@ class AQIPredictor:
         except Exception as e:
             print(f"WARNING: XGBoost pickle load failed: {e}")
         if not xgb_loaded:
+            # Try loading as XGBRegressor JSON
             try:
                 xgb_model = xgb.XGBRegressor()
                 xgb_model.load_model(f"{self.models_dir}/xgboost_model.json")
                 self.models["xgboost"] = xgb_model
-                print("XGBoost loaded (JSON)")
+                print("XGBoost loaded (JSON as XGBRegressor)")
                 xgb_loaded = True
             except Exception as e:
-                print(f"WARNING: XGBoost JSON load failed: {e}")
+                print(f"WARNING: XGBoost JSON load as XGBRegressor failed: {e}")
         if not xgb_loaded:
-            print("WARNING: XGBoost not loaded: both pickle and JSON failed.")
+            # Try loading as Booster (if model was saved using get_booster().save_model)
+            try:
+                booster = xgb.Booster()
+                booster.load_model(f"{self.models_dir}/xgboost_model.json")
+                self.models["xgboost"] = booster
+                print("XGBoost loaded (JSON as Booster)")
+                xgb_loaded = True
+            except Exception as e:
+                print(f"WARNING: XGBoost JSON load as Booster failed: {e}")
+        if not xgb_loaded:
+            print("WARNING: XGBoost not loaded: all formats failed.")
 
         if TENSORFLOW_AVAILABLE:
             try:
@@ -281,7 +292,13 @@ class AQIPredictor:
             if self.aqi_index is not None:
                 features_scaled = np.delete(features_scaled, self.aqi_index, axis=1)
 
-            prediction = self.models[model_name].predict(features_scaled)[0]
+            model = self.models[model_name]
+            # If Booster, use .predict with DMatrix
+            if isinstance(model, xgb.Booster):
+                dmatrix = xgb.DMatrix(features_scaled)
+                prediction = model.predict(dmatrix)[0]
+            else:
+                prediction = model.predict(features_scaled)[0]
 
         return max(0, prediction)  # AQI can't be negative
 
